@@ -1,0 +1,88 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+env:
+  vcXXX: vc142
+  VSVER_RANGE: '[16.0,17.0)' 
+  VS20YY: 2019  
+  
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: windows-2019
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: 'Check and cleanup build folder'
+        shell: bash
+        run: |
+          pwd
+          ls -la ./
+          echo cleanup...
+          rm -rf ./* || true
+          rm -rf ./.??* || true
+          echo cleanup finished
+          ls -la ./
+      - name: "Download EIGEN"
+        shell: pwsh
+        run: |
+          $dir_name_downloads = "downloads"
+          $dir_name_externals = "Externals"
+          $dir_name_tmp = $dir_name_downloads+"/tmp"
+          $dir="Eigen3"
+          $url="https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip"
+
+          $list_split_url = $url -split '/'
+          $filename = $list_split_url[-1]
+      
+          $outputPath = $dir_name_downloads + "/" + $filename
+          Write-Output "====================="
+          Write-Output $dir
+          Write-Output $url
+          Write-Output $outputPath
+          Write-Output "---"
+
+          Invoke-WebRequest -Uri $url -OutFile $outputPath
+
+          if ($outputPath -match "\.tar\.gz$") {
+            if (!(Test-Path -Path $dir_name_tmp)) {
+                New-Item -ItemType directory -Path $dir_name_tmp
+            }
+            tar -xvzf $outputPath -C $dir_name_tmp
+          } elseif ($outputPath -match "\.zip$"){
+            # ZIPファイルを一時フォルダに展開
+            Expand-Archive -Path $outputPath -DestinationPath $dir_name_tmp -Force
+          }
+          $extractedItems = Get-ChildItem -Path $dir_name_tmp
+          Write-Output "extractedItems = $extractedItems"
+          Write-Output ($extractedItems.Count)
+          
+          # 展開後のフォルダ名を確認して、必要に応じてリネームする
+          $extractedFolders = $extractedItems | Where-Object { $_.PSIsContainer }
+          Write-Output ($extractedFolders.Count)
+          $destdir = (Join-Path -Path $dir_name_externals -ChildPath $dir)
+          if (($extractedItems.Count -eq 1) -And ($extractedFolders.Count -eq 1)) {
+              Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $extractedFolders.Name) -Destination ($destdir)
+          }
+
+          # 後片付け: tmp フォルダの削除
+          Remove-Item -path $dir_name_tmp -recurse -force
+
+      # Runs a single command using the runners shell
+      - name: Run a one-line script
+        run: echo Hello, world!
+
+      - name: 'Check build folder'
+        shell: bash
+        run: |
+          pwd
+          ls -la ./
+          
