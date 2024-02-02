@@ -30,7 +30,7 @@ jobs:
           rm -rf ./* || true
           rm -rf ./.??* || true
           echo cleanup finished
-          ls -la ./
+          ls -Rla ./
       - name: "Download EIGEN"
         shell: pwsh
         run: |
@@ -88,5 +88,5 @@ jobs:
         shell: bash
         run: |
           pwd
-          ls -la ./
+          ls -Rla ./
           
