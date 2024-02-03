@@ -14,8 +14,7 @@ env:
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
-  build:
+  setup_build_env:
     # The type of runner that the job will run on
     runs-on: windows-2019
 
@@ -31,54 +30,68 @@ jobs:
           rm -rf ./.??* || true
           echo cleanup finished
           ls -Rla ./
-      - name: "Download EIGEN"
+
+      - name: Clone myself
+        uses: actions/checkout@v4
+        with:
+          path: my-source
+          ref: main
+
+      ## CUDA SDK
+      - name: Install CUDA SDK
         shell: pwsh
         run: |
-          $dir_name_downloads = "downloads"
-          $dir_name_externals = "Externals"
-          # ダウンロード先フォルダを作成
-          New-Item -ItemType Directory -Path $dir_name_downloads -Force
-          # Externals フォルダを作成
-          New-Item -ItemType Directory -Path $dir_name_externals -Force
-          $dir_name_tmp = $dir_name_downloads+"/tmp"
-          $dir="Eigen3"
-          $url="https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip"
+          . "./my-source/helper/SetupCUDASDK.ps1" -cuda "11.8.0" -download "${{github.workspace}}/CUDA"
+          $CUDA_PATH = "$env:CUDA_PATH" -replace "\\", "/"
+          echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_ENV
+          echo "envname_CUDA_PATH_VX_Y=$env:envname_CUDA_PATH_VX_Y" >> $env:GITHUB_ENV
+          echo "$env:envname_CUDA_PATH_VX_Y=$env:CUDA_PATH" >> $env:GITHUB_ENV
+          echo "CUDA_VER_0=$env:CUDA_VER_0" >> $env:GITHUB_ENV
+          echo "CUDA_VER_1=$env:CUDA_VER_1" >> $env:GITHUB_ENV
 
+      - name: ECHO CUDA_PATH
+        shell: pwsh
+        run: |
+          echo "env.CUDA_PATH=${{ env.CUDA_PATH }}"
+          echo "env.envname_CUDA_PATH_VX_Y=${{ env.envname_CUDA_PATH_VX_Y }}"
+
+      ## MPI
+      - name: download MSMPI setup
+        shell: pwsh
+        run: |
+          $url="https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe"
           $list_split_url = $url -split '/'
           $filename = $list_split_url[-1]
-      
-          $outputPath = $dir_name_downloads + "/" + $filename
-          Write-Output "====================="
-          Write-Output $dir
-          Write-Output $url
-          Write-Output $outputPath
-          Write-Output "---"
-
+          $dir_name_dl = "MPI"
+          $outputPath = $dir_name_dl + "/" + $filename
+          if (!(Test-Path -Path $dir_name_dl)) {
+            New-Item -ItemType directory -Path $dir_name_dl
+          }
+          Invoke-WebRequest -Uri $url -OutFile $outputPath
+  
+      - name: Install mpiexec.exe
+        working-directory: MPI
+        run: |
+          Start-Process -FilePath ".\msmpisetup.exe" -ArgumentList "-unattend -force" -Wait
+ 
+      - name: download MSMPISDK setup
+        shell: pwsh
+        run: |
+          $url="https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi"
+          $list_split_url = $url -split '/'
+          $filename = $list_split_url[-1]
+          $outputPath = "MPI/" + $filename
           Invoke-WebRequest -Uri $url -OutFile $outputPath
 
-          if ($outputPath -match "\.tar\.gz$") {
-            if (!(Test-Path -Path $dir_name_tmp)) {
-                New-Item -ItemType directory -Path $dir_name_tmp
-            }
-            tar -xvzf $outputPath -C $dir_name_tmp
-          } elseif ($outputPath -match "\.zip$"){
-            # ZIPファイルを一時フォルダに展開
-            Expand-Archive -Path $outputPath -DestinationPath $dir_name_tmp -Force
-          }
-          $extractedItems = Get-ChildItem -Path $dir_name_tmp
-          Write-Output "extractedItems = $extractedItems"
-          Write-Output ($extractedItems.Count)
-          
-          # 展開後のフォルダ名を確認して、必要に応じてリネームする
-          $extractedFolders = $extractedItems | Where-Object { $_.PSIsContainer }
-          Write-Output ($extractedFolders.Count)
-          $destdir = (Join-Path -Path $dir_name_externals -ChildPath $dir)
-          if (($extractedItems.Count -eq 1) -And ($extractedFolders.Count -eq 1)) {
-              Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $extractedFolders.Name) -Destination ($destdir)
-          }
+      - name: Install MPI SDK
+        shell: pwsh
+        working-directory: MPI
+        run: |
+          Start-Process -FilePath "c:\windows\system32\msiexec.exe" -ArgumentList "/i msmpisdk.msi /passive" -Wait
 
-          # 後片付け: tmp フォルダの削除
-          Remove-Item -path $dir_name_tmp -recurse -force
+      ## 外部ライブラリ
+      - name: Download and Extract Zip
+        run: pwsh my-source/helper/DownloadExternalLibs.ps1
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
