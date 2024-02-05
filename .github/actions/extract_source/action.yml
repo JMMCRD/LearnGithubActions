@@ -32,11 +32,11 @@ runs:
             if (!(Test-Path -Path $dir_name_tmp)) {
                 New-Item -ItemType directory -Path $dir_name_tmp
             }
-            & 7z x $compressed_source -o$dir_name_tmp
+            Start-Process -FilePath 7z.exe -ArgumentList "x $compressed_source -o$dir_name_tmp" -Wait
             # tar -xvzf $compressed_source -C $dir_name_tmp
         } elseif ($compressed_source -match "\.zip$"){
             # ZIPファイルを一時フォルダに展開
-            & 7z e $compressed_source -o$dir_name_tmp
+            Start-Process -FilePath 7z.exe -ArgumentList "e $compressed_source -o$dir_name_tmp" -Wait
             # Expand-Archive -Path $outputPath -DestinationPath $dir_name_tmp -Force
         } else {
             Write-Output "$outputPath is not an archive file"
