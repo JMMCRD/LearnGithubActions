@@ -31,4 +31,7 @@ runs:
             Write-Output "Using local copy of $outputPath"
         }
         echo "downloaded_file=$outputPath" 
-        echo "downloaded_file=$outputPath" >> $env:GITHUB_OUTPUT
+        # echo "downloaded_file=$outputPath" >> $env:GITHUB_OUTPUT
+        echo "downloaded_file=$outputPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+
