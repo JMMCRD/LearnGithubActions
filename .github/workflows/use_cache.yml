@@ -10,7 +10,9 @@ on:
 env:
   vcXXX: vc142
   VSVER_RANGE: '[16.0,17.0)' 
-  VS20YY: 2019  
+  VS20YY: 2019
+
+  VER_MPI: v10.1.1
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -31,35 +33,19 @@ jobs:
           echo cleanup finished
           ls -Rla ./
 
-      - name: Clone myself
-        uses: actions/checkout@v4
-        with:
-          path: my-source
-          ref: main
-
-      ## CUDA SDK
-      - name: Install CUDA SDK
-        shell: pwsh
-        run: |
-          . "./my-source/helper/SetupCUDASDK.ps1" -cuda "11.8.0" -download "${{github.workspace}}/CUDA"
-          $CUDA_PATH = "$env:CUDA_PATH" -replace "\\", "/"
-          echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_ENV
-          echo "envname_CUDA_PATH_VX_Y=$env:envname_CUDA_PATH_VX_Y" >> $env:GITHUB_ENV
-          echo "$env:envname_CUDA_PATH_VX_Y=$env:CUDA_PATH" >> $env:GITHUB_ENV
-          echo "CUDA_VER_0=$env:CUDA_VER_0" >> $env:GITHUB_ENV
-          echo "CUDA_VER_1=$env:CUDA_VER_1" >> $env:GITHUB_ENV
-
-      - name: ECHO CUDA_PATH
-        shell: pwsh
-        run: |
-          echo "env.CUDA_PATH=${{ env.CUDA_PATH }}"
-          echo "env.envname_CUDA_PATH_VX_Y=${{ env.envname_CUDA_PATH_VX_Y }}"
-
       ## MPI
+      - name: Restore Cache MPI
+        id: cache_restore_mpi
+        uses: actions/cache/restore@v3
+        with:
+          path: C:\Program Files\Microsoft MPI
+          key: ${{ runner.os }}-mpi-${{ env.VER_MPI }}
+
       - name: download MSMPI setup
+        if: steps.cache_restore_mpi.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          $url="https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisetup.exe"
+          $url="https://github.com/microsoft/Microsoft-MPI/releases/download/${{ env.VER_MPI }}/msmpisetup.exe"
           $list_split_url = $url -split '/'
           $filename = $list_split_url[-1]
           $dir_name_dl = "MPI"
@@ -70,36 +56,77 @@ jobs:
           Invoke-WebRequest -Uri $url -OutFile $outputPath
   
       - name: Install mpiexec.exe
+        if: steps.cache_restore_mpi.outputs.cache-hit != 'true'
         working-directory: MPI
         run: |
           Start-Process -FilePath ".\msmpisetup.exe" -ArgumentList "-unattend -force" -Wait
  
       - name: download MSMPISDK setup
+        if: steps.cache_restore_mpi.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          $url="https://github.com/microsoft/Microsoft-MPI/releases/download/v10.1.1/msmpisdk.msi"
+          $url="https://github.com/microsoft/Microsoft-MPI/releases/download/${{ env.VER_MPI }}/msmpisdk.msi"
           $list_split_url = $url -split '/'
           $filename = $list_split_url[-1]
           $outputPath = "MPI/" + $filename
           Invoke-WebRequest -Uri $url -OutFile $outputPath
 
       - name: Install MPI SDK
+        if: steps.cache_restore_mpi.outputs.cache-hit != 'true'
         shell: pwsh
         working-directory: MPI
         run: |
           Start-Process -FilePath "c:\windows\system32\msiexec.exe" -ArgumentList "/i msmpisdk.msi /passive" -Wait
+    
+      - name: Save Cache MPI
+        if: steps.cache_restore_mpi.outputs.cache-hit != 'true'
+        id: cache_save_mpi
+        uses: actions/cache/save@v3
+        with:
+          path: C:\Program Files\Microsoft MPI
+          key: ${{ runner.os }}-mpi-${{ env.VER_MPI }}
 
-      ## 外部ライブラリ
-      - name: Download and Extract Zip
-        run: pwsh my-source/helper/DownloadExternalLibs.ps1
+      # - name: Clone myself
+      #   uses: actions/checkout@v4
+      #   with:
+      #     path: my-source
+      #     ref: main
 
-      # Runs a single command using the runners shell
-      - name: Run a one-line script
-        run: echo Hello, world!
+      # ## CUDA SDK
+      # - name: Install CUDA SDK
+      #   shell: pwsh
+      #   run: |
+      #     . "./my-source/helper/SetupCUDASDK.ps1" -cuda "11.8.0" -download "${{github.workspace}}/CUDA"
+      #     $CUDA_PATH = "$env:CUDA_PATH" -replace "\\", "/"
+      #     echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_ENV
+      #     echo "envname_CUDA_PATH_VX_Y=$env:envname_CUDA_PATH_VX_Y" >> $env:GITHUB_ENV
+      #     echo "$env:envname_CUDA_PATH_VX_Y=$env:CUDA_PATH" >> $env:GITHUB_ENV
+      #     echo "CUDA_VER_0=$env:CUDA_VER_0" >> $env:GITHUB_ENV
+      #     echo "CUDA_VER_1=$env:CUDA_VER_1" >> $env:GITHUB_ENV
+
+      # - name: ECHO CUDA_PATH
+      #   shell: pwsh
+      #   run: |
+      #     echo "env.CUDA_PATH=${{ env.CUDA_PATH }}"
+      #     echo "env.envname_CUDA_PATH_VX_Y=${{ env.envname_CUDA_PATH_VX_Y }}"
+
+
+      # ## 外部ライブラリ
+      # - name: Download and Extract Zip
+      #   run: pwsh my-source/helper/DownloadExternalLibs.ps1
+
+      # # Runs a single command using the runners shell
+      # - name: Run a one-line script
+      #   run: echo Hello, world!
 
       - name: 'Check build folder'
         shell: bash
         run: |
           pwd
           ls -Rla ./
-          
+ 
+      - name: 'Check MPI folder'
+        shell: bash
+        run: |
+          pwd
+          ls -Rla "C:/Program Files/Microsoft MPI"
