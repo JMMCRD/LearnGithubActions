@@ -134,7 +134,7 @@ jobs:
       ### EIGEN3
       - name: Download Eigen3
         id: download_eigen3
-        uses: ./.github/actions/download_if_necessary@v1
+        uses: ./.github/actions/download_if_necessary
         with:
           url: "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip"
 
