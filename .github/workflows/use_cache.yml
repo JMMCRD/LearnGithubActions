@@ -108,7 +108,7 @@ jobs:
       - name: Install CUDA SDK
         shell: pwsh
         run: |
-          $skipInstall = if ("${{ env.CUDA_CACHE_HIT }}" -ne "true" ) { "false" } else { "true" }
+          $skipInstall = if ("${{ env.CUDA_CACHE_HIT }}" -eq "true" ) { "true" } else { "false" }
           . "./my-source/helper/SetupCUDASDK.ps1" -cuda ${{ env.VER_CUDA }} -download "${{github.workspace}}/CUDA" -skipInstall $skipInstall
           $CUDA_PATH = "$env:CUDA_PATH" -replace "\\", "/"
           echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_ENV
