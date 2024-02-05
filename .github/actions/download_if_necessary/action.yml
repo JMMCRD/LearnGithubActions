@@ -2,6 +2,9 @@ inputs:
   url:
     description: "URL"
     required: true
+outputs:
+  downloaded_file:
+    description: 'path to the downloaded file'
 
 runs:
   using: "Composite"
@@ -27,4 +30,4 @@ runs:
         } else {
             Write-Output "Using local copy of $outputPath"
         }
-        echo "outputPath=$outputPath" >> $env:GITHUB_OUTPUT
+        echo "downloaded_file=$outputPath" >> $env:GITHUB_OUTPUT
