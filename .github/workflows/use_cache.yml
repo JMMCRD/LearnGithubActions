@@ -131,9 +131,24 @@ jobs:
           echo "env.CUDA_PATH=${{ env.CUDA_PATH }}"
           echo "env.envname_CUDA_PATH_VX_Y=${{ env.envname_CUDA_PATH_VX_Y }}"
 
-      # ## 外部ライブラリ
-      # - name: Download and Extract Zip
-      #   run: pwsh my-source/helper/DownloadExternalLibs.ps1
+      ## 外部ライブラリ
+      - name: Restore Cache Downloads
+        id: cache_restore_downloads
+        uses: actions/cache/restore@v4
+        with:
+          path: downloads
+          key: ${{ runner.os }}-downloads-${{ hashFiles('**/DownloadExternalLibs.ps1')  }}
+
+      - name: Download and Extract Zip
+        run: pwsh my-source/helper/DownloadExternalLibs.ps1
+
+      - name: Save Cache Downloads
+        if: steps.cache_restore_downloads.outputs.cache-hit != 'true'
+        id: cache_save_downloads
+        uses: actions/cache/save@v4
+        with:
+          path: downloads
+          key: ${{ runner.os }}-downloads-${{ hashFiles('**/DownloadExternalLibs.ps1')  }}
 
       # # Runs a single command using the runners shell
       # - name: Run a one-line script
