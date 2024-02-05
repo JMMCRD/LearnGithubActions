@@ -10,6 +10,8 @@ runs:
       shell: pwsh
       run: |
         $dir_name_downloads = "downloads"
+        # ダウンロード先フォルダを作成
+        New-Item -ItemType Directory -Path $dir_name_downloads -Force
         $url = "${{ inputs.url }}"
         $list_split_url = $url -split '/'
         $filename = $list_split_url[-1]
