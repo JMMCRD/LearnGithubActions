@@ -108,7 +108,7 @@ jobs:
       #   shell: pwsh
       #   run: |
       #     $skipInstall = if ("${{ env.CUDA_CACHE_HIT }}" -eq "true" ) { "true" } else { "false" }
-      #     . "./my-source/.github/helper/SetupCUDASDK.ps1" -cuda ${{ env.VER_CUDA }} -download "${{github.workspace}}/CUDA" -skipInstall $skipInstall
+      #     . "./.github/helper/SetupCUDASDK.ps1" -cuda ${{ env.VER_CUDA }} -download "${{github.workspace}}/CUDA" -skipInstall $skipInstall
       #     $CUDA_PATH = "$env:CUDA_PATH" -replace "\\", "/"
       #     echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_ENV
       #     echo "envname_CUDA_PATH_VX_Y=$env:envname_CUDA_PATH_VX_Y" >> $env:GITHUB_ENV
@@ -162,7 +162,7 @@ jobs:
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          & "my-source/.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/Eigen3 -B build/Eigen3 -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/Eigen3"         
+          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/Eigen3 -B build/Eigen3 -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/Eigen3"         
 
       ### MSBuild
       - name: Add MSBuild to PATH
@@ -193,7 +193,7 @@ jobs:
       #     key: ${{ runner.os }}-downloads-${{ hashFiles('**/DownloadExternalLibs.ps1')  }}
 
       # - name: Download and Extract Zip
-      #   run: pwsh my-source/.github/helper/DownloadExternalLibs.ps1
+      #   run: pwsh .github/helper/DownloadExternalLibs.ps1
 
       # - name: Save Cache Downloads
       #   if: steps.cache_restore_downloads.outputs.cache-hit != 'true'
