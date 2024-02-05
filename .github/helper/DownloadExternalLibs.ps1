@@ -41,38 +41,38 @@ Foreach($item in $list_libs){
         Write-Output "Using local copy of $outputPath"
     }
 
-    if ($outputPath -match "\.tar\.gz$") {
-        if (!(Test-Path -Path $dir_name_tmp)) {
-            New-Item -ItemType directory -Path $dir_name_tmp
-        }
-        tar -xvzf $outputPath -C $dir_name_tmp
-    } elseif ($outputPath -match "\.zip$"){
-        # ZIPファイルを一時フォルダに展開
-        Expand-Archive -Path $outputPath -DestinationPath $dir_name_tmp -Force
-    } else {
-        Write-Output "$outputPath is not an archive file"
-        continue
-    }
-    $extractedItems = Get-ChildItem -Path $dir_name_tmp
-    Write-Output "extractedItems = $extractedItems"
-    Write-Output ($extractedItems.Count)
+    # if ($outputPath -match "\.tar\.gz$") {
+    #     if (!(Test-Path -Path $dir_name_tmp)) {
+    #         New-Item -ItemType directory -Path $dir_name_tmp
+    #     }
+    #     tar -xvzf $outputPath -C $dir_name_tmp
+    # } elseif ($outputPath -match "\.zip$"){
+    #     # ZIPファイルを一時フォルダに展開
+    #     Expand-Archive -Path $outputPath -DestinationPath $dir_name_tmp -Force
+    # } else {
+    #     Write-Output "$outputPath is not an archive file"
+    #     continue
+    # }
+    # $extractedItems = Get-ChildItem -Path $dir_name_tmp
+    # Write-Output "extractedItems = $extractedItems"
+    # Write-Output ($extractedItems.Count)
     
-    # 展開後のフォルダ名を確認して、必要に応じてリネームする
-    $extractedFolders = $extractedItems | Where-Object { $_.PSIsContainer }
-    Write-Output ($extractedFolders.Count)
-    $destdir = (Join-Path -Path $dir_name_externals -ChildPath $dir)
-    if (($extractedItems.Count -eq 1) -And ($extractedFolders.Count -eq 1)) {
-        Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $extractedFolders.Name) -Destination ($destdir)
-    } else {
-        $destdir = ($destdir)
-        New-Item -ItemType directory -Path $destdir -Force
-        foreach ($item2 in $extractedItems) {
-            Write-Output "item2 = $item2"
-            Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $item2) -Destination $destdir
-        }
-    }
-    # 後片付け: tmp フォルダの削除
-    Remove-Item -path $dir_name_tmp -recurse -force
+    # # 展開後のフォルダ名を確認して、必要に応じてリネームする
+    # $extractedFolders = $extractedItems | Where-Object { $_.PSIsContainer }
+    # Write-Output ($extractedFolders.Count)
+    # $destdir = (Join-Path -Path $dir_name_externals -ChildPath $dir)
+    # if (($extractedItems.Count -eq 1) -And ($extractedFolders.Count -eq 1)) {
+    #     Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $extractedFolders.Name) -Destination ($destdir)
+    # } else {
+    #     $destdir = ($destdir)
+    #     New-Item -ItemType directory -Path $destdir -Force
+    #     foreach ($item2 in $extractedItems) {
+    #         Write-Output "item2 = $item2"
+    #         Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $item2) -Destination $destdir
+    #     }
+    # }
+    # # 後片付け: tmp フォルダの削除
+    # Remove-Item -path $dir_name_tmp -recurse -force
 
 }
 
