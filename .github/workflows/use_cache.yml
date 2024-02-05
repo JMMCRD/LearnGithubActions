@@ -138,41 +138,51 @@ jobs:
         with:
           url: "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip"
 
-      - name: Check Eigen3
+      - name: Set props Eigen3
+        id: set_props_eigen3
         shell: pwsh
         run: |
-          Write-Host "downloaded_file =  ${{ steps.download_eigen3.outputs.downloaded_file }}"
+          . ./.github/helper/CalcChecksumOfFiles.ps1
+          $source_and_patches=@(
+            "${{ steps.download_eigen3.outputs.downloaded_file }}",
+            ""
+          )
+          $hash = CalcChecksumOfFiles( $source_and_patches )
+          echo "HASH_EIGEN3=$hash" >> $env:GITHUB_OUTPUT
+          echo "DIRNAME_EIGEN3=Eigen3" >> $env:GITHUB_OUTPUT
 
-      # - name: Set props Eigen3
-      #   id: set_props_eigen3
-      #   needs: [download_eigen3]
-      #   shell: pwsh
-      #   run: |
-      #     . ./.github/helper/CalcChecksumOfFiles.ps1
-      #     $source_and_patches=@(
-      #       "downloads/eigen-3.4.0.zip",
-      #       ""
-      #     )
-      #     $hash = CalcChecksumOfFiles( $source_and_patches )
-      #     echo "HASH_EIGEN3=$hash" >> $env:GITHUB_OUTPUT
-      #     echo "DIRNAME_EIGEN3=Eigen3" >> $env:GITHUB_OUTPUT
+      - name: Restore Cache Eigen3
+        id: cache_restore_eigen3
+        uses: actions/cache/restore@v4
+        with:
+          path: "${{github.workspace}}/opt/Eigen3"
+          key: ${{ runner.os }}-eigen3-${{ steps.set_props_eigen3.outputs.HASH_EIGEN3 }}
 
-      # - name: Restore Cache Eigen3
-      #   id: cache_restore_eigen3
-      #   needs: [set_props_eigen]
-      #   uses: actions/cache/restore@v4
-      #   with:
-      #     path: "${{github.workspace}}/opt/Eigen3"
-      #     key: ${{ runner.os }}-eigen3-${{ env.VER_CUDA }}
+      - name: "CMake Eigen"
+        if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          & "my-source/.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/Eigen3 -B build/Eigen3 -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/Eigen3"         
 
-      # - name: "CMake Eigen"
-      #   shell: pwsh
-      #   run: |
-      #     & "my-source/.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/Eigen3 -B build/Eigen3 -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/Eigen3"         
-      # - name: "MsBuild Eigen"
-      #   run: |
-      #     msbuild -version
-      #     msbuild build\Eigen3\INSTALL.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release
+      ### MSBuild
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-version: ${{ env.VSVER_RANGE }}
+
+      - name: "MsBuild Eigen"
+        if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
+        run: |
+          msbuild -version
+          msbuild build\Eigen3\INSTALL.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release
+
+      - name: Save Cache Eigen3
+        if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
+        id: cache_save_eigen3
+        uses: actions/cache/save@v4
+        with:
+          path: "${{github.workspace}}/opt/Eigen3"
+          key: ${{ runner.os }}-eigen3-${{ steps.set_props_eigen3.outputs.HASH_EIGEN3 }}
 
 
       # - name: Restore Cache Downloads
