@@ -140,7 +140,6 @@ jobs:
           url: "https://gitlab.com/libeigen/eigen/-/archive/3.4.0/eigen-3.4.0.zip"
 
       - name: Check Eigen3
-        needs: [download_eigen3]
         shell: pwsh
         run: |
           Write-Host ${{ steps.download_eigen3.outputs.outputPath }}
