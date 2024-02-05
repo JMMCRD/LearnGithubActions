@@ -1,0 +1,64 @@
+name: "Extract Source"
+inputs:
+  compressed_source:
+    description: "Compressed source file"
+    required: true
+  dir:
+    description: "Destination Folder Name"
+    required: true
+# outputs:
+#   downloaded_file:
+#     description: 'path to the downloaded file'
+#     value: ${{ steps.download_if_necessary.outputs.downloaded_file }}
+
+runs:
+  using: "Composite"
+    steps:
+    - name: Extract file
+      id: download_if_necessary
+      shell: pwsh
+      run: |
+        $dir_name_externals = "Externals"
+        # Externals フォルダを作成
+        New-Item -ItemType Directory -Path $dir_name_externals -Force
+
+        # 展開一時フォルダ名
+        $dir_name_tmp = $dir_name_downloads+"/tmp"
+
+        $compressed_source = "${{ inputs.compressed_source }}"
+        $dir = "${{ inputs.dir }}"
+
+        if ($compressed_source -match "\.tar\.gz$") {
+            if (!(Test-Path -Path $dir_name_tmp)) {
+                New-Item -ItemType directory -Path $dir_name_tmp
+            }
+            & 7z x $compressed_source -o$dir_name_tmp
+            # tar -xvzf $compressed_source -C $dir_name_tmp
+        } elseif ($compressed_source -match "\.zip$"){
+            # ZIPファイルを一時フォルダに展開
+            & 7z e $compressed_source -o$dir_name_tmp
+            # Expand-Archive -Path $outputPath -DestinationPath $dir_name_tmp -Force
+        } else {
+            Write-Output "$outputPath is not an archive file"
+            return
+        }
+        $extractedItems = Get-ChildItem -Path $dir_name_tmp
+        Write-Output "extractedItems = $extractedItems"
+        Write-Output ($extractedItems.Count)
+
+        # 展開後のフォルダ名を確認して、必要に応じてリネームする
+        $extractedFolders = $extractedItems | Where-Object { $_.PSIsContainer }
+        Write-Output ($extractedFolders.Count)
+        $destdir = (Join-Path -Path $dir_name_externals -ChildPath $dir)
+        if (($extractedItems.Count -eq 1) -And ($extractedFolders.Count -eq 1)) {
+            Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $extractedFolders.Name) -Destination ($destdir)
+        } else {
+            $destdir = ($destdir)
+            New-Item -ItemType directory -Path $destdir -Force
+            foreach ($item2 in $extractedItems) {
+                Write-Output "item2 = $item2"
+                Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $item2) -Destination $destdir
+            }
+        }
+        # 後片付け: tmp フォルダの削除
+        Remove-Item -path $dir_name_tmp -recurse -force

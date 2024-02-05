@@ -158,6 +158,14 @@ jobs:
           path: "${{github.workspace}}/opt/Eigen3"
           key: ${{ runner.os }}-eigen3-${{ steps.set_props_eigen3.outputs.HASH_EIGEN3 }}
 
+      - name: Extract Eigen3
+        if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
+        id: extract_eigen3
+        uses: ./.github/actions/extract_source
+        with:
+          compressed_source: "${{ steps.download_eigen3.outputs.downloaded_file }}"
+          dir: ${{ steps.set_props_eigen3.outputs.DIRNAME_EIGEN3 }}
+
       - name: "CMake Eigen"
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
         shell: pwsh
