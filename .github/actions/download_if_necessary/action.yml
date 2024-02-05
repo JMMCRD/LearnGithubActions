@@ -3,7 +3,7 @@ inputs:
     description: "URL"
     required: true
 outputs:
-  downloaded_file:
+  output1:
     description: 'path to the downloaded file'
 
 runs:
@@ -32,6 +32,6 @@ runs:
         }
         echo "downloaded_file=$outputPath" 
         # echo "downloaded_file=$outputPath" >> $env:GITHUB_OUTPUT
-        echo "downloaded_file=$outputPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+        echo "output1=$outputPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
 
