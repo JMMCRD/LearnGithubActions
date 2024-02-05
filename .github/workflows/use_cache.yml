@@ -36,7 +36,7 @@ jobs:
       ## MPI
       - name: Restore Cache MPI
         id: cache_restore_mpi
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: C:\Program Files\Microsoft MPI
           key: ${{ runner.os }}-mpi-${{ env.VER_MPI }}
@@ -81,7 +81,7 @@ jobs:
       - name: Save Cache MPI
         if: steps.cache_restore_mpi.outputs.cache-hit != 'true'
         id: cache_save_mpi
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: C:\Program Files\Microsoft MPI
           key: ${{ runner.os }}-mpi-${{ env.VER_MPI }}
