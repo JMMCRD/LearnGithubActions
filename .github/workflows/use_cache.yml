@@ -139,6 +139,12 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+      ## 自リポジトリ
+      - name: Clone myself
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
       ## MPI
       - name: Restore Cache MPI
         id: cache_restore_mpi
@@ -146,6 +152,7 @@ jobs:
         with:
           path: C:\Program Files\Microsoft MPI
           key: ${{ runner.os }}-mpi-${{ env.VER_MPI }}
+
       ## CUDA
       - name: Restore Cache CUDA
         id: cache_restore_cuda
@@ -154,6 +161,7 @@ jobs:
           path: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA
           key: ${{ runner.os }}-cuda-${{ env.VER_CUDA }}      
 
+      ## Eigen3
       - name: Download Eigen3
         id: download_eigen3
         uses: ./.github/actions/download_if_necessary
