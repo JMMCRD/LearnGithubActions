@@ -141,7 +141,6 @@ jobs:
       - name: Check Eigen3
         shell: pwsh
         run: |
-          Write-Host "output1 =  ${{ steps.download_eigen3.outputs.output1 }}"
           Write-Host "downloaded_file =  ${{ steps.download_eigen3.outputs.downloaded_file }}"
 
       # - name: Set props Eigen3

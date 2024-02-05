@@ -4,8 +4,6 @@ inputs:
     description: "URL"
     required: true
 outputs:
-  output1:
-    description: 'path to the downloaded file'
   downloaded_file:
     description: 'path to the downloaded file'
     value: ${{ steps.download_if_necessary.outputs.downloaded_file }}
@@ -37,12 +35,10 @@ runs:
         }
         echo "downloaded_file=$outputPath" 
         echo "downloaded_file=$outputPath" >> $env:GITHUB_OUTPUT
-        echo "output1=$outputPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
     - name: Check
       id: check_output
       shell: pwsh
       run: |
-        echo "output1=${{ steps.download_if_necessary.outputs.output1 }}"
         echo "downloaded_file=${{ steps.download_if_necessary.outputs.downloaded_file }}"
         
 
