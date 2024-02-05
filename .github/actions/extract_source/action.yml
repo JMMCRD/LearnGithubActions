@@ -44,11 +44,11 @@ runs:
         }
         $extractedItems = Get-ChildItem -Path $dir_name_tmp
         Write-Output "extractedItems = $extractedItems"
-        Write-Output ($extractedItems.Count)
+        # Write-Output ($extractedItems.Count)
 
         # 展開後のフォルダ名を確認して、必要に応じてリネームする
         $extractedFolders = $extractedItems | Where-Object { $_.PSIsContainer }
-        Write-Output ($extractedFolders.Count)
+        # Write-Output ($extractedFolders.Count)
         $destdir = (Join-Path -Path $dir_name_externals -ChildPath $dir)
         if (($extractedItems.Count -eq 1) -And ($extractedFolders.Count -eq 1)) {
             Move-Item -Path (Join-Path -Path $dir_name_tmp -ChildPath $extractedFolders.Name) -Destination ($destdir)
