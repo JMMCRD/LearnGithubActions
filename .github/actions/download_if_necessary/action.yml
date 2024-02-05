@@ -1,3 +1,4 @@
+name: "Download file if necessary"
 inputs:
   url:
     description: "URL"
@@ -8,8 +9,10 @@ outputs:
 
 runs:
   using: "Composite"
+  
   steps:
-    - name: download_if_necessary
+    - name: Download if necessary
+      id: download_if_necessary
       shell: pwsh
       run: |
         $dir_name_downloads = "downloads"
@@ -33,5 +36,6 @@ runs:
         echo "downloaded_file=$outputPath" 
         # echo "downloaded_file=$outputPath" >> $env:GITHUB_OUTPUT
         echo "output1=$outputPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
 
 
