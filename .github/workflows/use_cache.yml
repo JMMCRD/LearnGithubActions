@@ -13,6 +13,7 @@ env:
   VS20YY: 2019
 
   VER_MPI: v10.1.1
+  VER_CUDA: 11.8.0
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -86,30 +87,46 @@ jobs:
           path: C:\Program Files\Microsoft MPI
           key: ${{ runner.os }}-mpi-${{ env.VER_MPI }}
 
-      # - name: Clone myself
-      #   uses: actions/checkout@v4
-      #   with:
-      #     path: my-source
-      #     ref: main
+      ## 自リポジトリ
+      - name: Clone myself
+        uses: actions/checkout@v4
+        with:
+          path: my-source
+          ref: main
 
-      # ## CUDA SDK
-      # - name: Install CUDA SDK
-      #   shell: pwsh
-      #   run: |
-      #     . "./my-source/helper/SetupCUDASDK.ps1" -cuda "11.8.0" -download "${{github.workspace}}/CUDA"
-      #     $CUDA_PATH = "$env:CUDA_PATH" -replace "\\", "/"
-      #     echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_ENV
-      #     echo "envname_CUDA_PATH_VX_Y=$env:envname_CUDA_PATH_VX_Y" >> $env:GITHUB_ENV
-      #     echo "$env:envname_CUDA_PATH_VX_Y=$env:CUDA_PATH" >> $env:GITHUB_ENV
-      #     echo "CUDA_VER_0=$env:CUDA_VER_0" >> $env:GITHUB_ENV
-      #     echo "CUDA_VER_1=$env:CUDA_VER_1" >> $env:GITHUB_ENV
+      ## CUDA SDK
+      - name: Restore Cache CUDA
+        id: cache_restore_cuda
+        uses: actions/cache/restore@v4
+        with:
+          path: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA
+          key: ${{ runner.os }}-cuda-${{ env.VER_CUDA }}
 
-      # - name: ECHO CUDA_PATH
-      #   shell: pwsh
-      #   run: |
-      #     echo "env.CUDA_PATH=${{ env.CUDA_PATH }}"
-      #     echo "env.envname_CUDA_PATH_VX_Y=${{ env.envname_CUDA_PATH_VX_Y }}"
+      - name: Install CUDA SDK
+        if: steps.cache_restore_cuda.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          . "./my-source/helper/SetupCUDASDK.ps1" -cuda ${{ env.VER_CUDA }} -download "${{github.workspace}}/CUDA"
+          $CUDA_PATH = "$env:CUDA_PATH" -replace "\\", "/"
+          echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_ENV
+          echo "envname_CUDA_PATH_VX_Y=$env:envname_CUDA_PATH_VX_Y" >> $env:GITHUB_ENV
+          echo "$env:envname_CUDA_PATH_VX_Y=$env:CUDA_PATH" >> $env:GITHUB_ENV
+          echo "CUDA_VER_0=$env:CUDA_VER_0" >> $env:GITHUB_ENV
+          echo "CUDA_VER_1=$env:CUDA_VER_1" >> $env:GITHUB_ENV
 
+      - name: Save Cache CUDA
+        if: steps.cache_restore_cuda.outputs.cache-hit != 'true'
+        id: cache_save_cuda
+        uses: actions/cache/save@v4
+        with:
+          path: C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA
+          key: ${{ runner.os }}-cuda-${{ env.VER_CUDA }}
+
+      - name: ECHO CUDA_PATH
+        shell: pwsh
+        run: |
+          echo "env.CUDA_PATH=${{ env.CUDA_PATH }}"
+          echo "env.envname_CUDA_PATH_VX_Y=${{ env.envname_CUDA_PATH_VX_Y }}"
 
       # ## 外部ライブラリ
       # - name: Download and Extract Zip
@@ -130,3 +147,10 @@ jobs:
         run: |
           pwd
           ls -Rla "C:/Program Files/Microsoft MPI"
+
+      - name: 'Check CUDA'
+        shell: pwsh
+        run: |
+          $path_nvcc = "${{ env.CUDA_PATH }}\bin\nvcc.exe"
+          Write-Output "path_nvcc: " $path_nvcc
+          Start-Process -FilePath $path_nvcc -ArgumentList "-V" -NoNewWindow -Wait
