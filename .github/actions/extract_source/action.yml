@@ -13,9 +13,9 @@ inputs:
 
 runs:
   using: "Composite"
-    steps:
+  steps:
     - name: Extract file
-      id: download_if_necessary
+      id: extract_file
       shell: pwsh
       run: |
         $dir_name_externals = "Externals"
