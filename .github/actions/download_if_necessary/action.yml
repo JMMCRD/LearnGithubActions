@@ -37,7 +37,8 @@ runs:
         echo "downloaded_file=$outputPath" 
         echo "downloaded_file=$outputPath" >> $env:GITHUB_OUTPUT
         echo "output1=$outputPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
-    - naeme: Check 
+    - name: Check
+      id: check_output
       shell: pwsh
       run: |
         echo "output1=${{ steps.download_if_necessary.outputs.output1 }}"
