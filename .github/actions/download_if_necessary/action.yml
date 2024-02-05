@@ -10,7 +10,7 @@ runs:
       shell: pwsh
       run: |
         $dir_name_downloads = "downloads"
-        $url = ${{ inputs.url }}
+        $url = "${{ inputs.url }}"
         $list_split_url = $url -split '/'
         $filename = $list_split_url[-1]
         $outputPath = $dir_name_downloads + "/" + $filename
