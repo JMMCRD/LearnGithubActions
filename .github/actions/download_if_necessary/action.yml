@@ -8,6 +8,7 @@ outputs:
     description: 'path to the downloaded file'
   downloaded_file:
     description: 'path to the downloaded file'
+    value: ${{ steps.download_if_necessary.outputs.downloaded_file }}
 runs:
   using: "Composite"
   
