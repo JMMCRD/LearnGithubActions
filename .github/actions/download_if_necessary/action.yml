@@ -25,4 +25,4 @@ runs:
         } else {
             Write-Output "Using local copy of $outputPath"
         }
-        echo "outputPath=$outputPath" >> ${{ env:GITHUB_OUTPUT }}
+        echo "outputPath=$outputPath" >> $env:GITHUB_OUTPUT
