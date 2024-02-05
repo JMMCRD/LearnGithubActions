@@ -1,0 +1,28 @@
+inputs:
+  url:
+    description: "URL"
+    required: true
+
+runs:
+  using: "Composite"
+  steps:
+    - name: download_if_necessary
+      shell: pwsh
+      run: |
+        $dir_name_downloads = "downloads"
+        $url = ${{ inputs.url }}
+        $list_split_url = $url -split '/'
+        $filename = $list_split_url[-1]
+        $outputPath = $dir_name_downloads + "/" + $filename
+        # Write-Output "====================="
+        # Write-Output $dir
+        # Write-Output $url
+        # Write-Output $outputPath
+        # Write-Output "---"
+        if (-Not (Test-Path -Path $outputPath)) {
+            # ダウンロード
+            Invoke-WebRequest -Uri $url -OutFile $outputPath
+        } else {
+            Write-Output "Using local copy of $outputPath"
+        }
+        echo "outputPath=$outputPath" >> ${{ env:GITHUB_OUTPUT }}
