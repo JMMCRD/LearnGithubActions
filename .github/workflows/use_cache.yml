@@ -21,6 +21,10 @@ jobs:
     # The type of runner that the job will run on
     runs-on: windows-2019
 
+    outputs:
+      cuda_path: ${{ steps.install_cuda_sdk.outputs.CUDA_PATH}}
+
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: 'Check and cleanup build folder'
@@ -105,12 +109,13 @@ jobs:
         run: echo "CUDA_CACHE_HIT=${{ steps.cache_restore_cuda.outputs.cache-hit }}" >> $env:GITHUB_ENV
 
       - name: Install CUDA SDK
+        id: install_cuda_sdk
         shell: pwsh
         run: |
           $skipInstall = if ("${{ env.CUDA_CACHE_HIT }}" -eq "true" ) { "true" } else { "false" }
           . "./.github/helper/SetupCUDASDK.ps1" -cuda ${{ env.VER_CUDA }} -download "${{github.workspace}}/CUDA" -skipInstall $skipInstall
           $CUDA_PATH = "$env:CUDA_PATH" -replace "\\", "/"
-          echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_ENV
+          echo "CUDA_PATH=$CUDA_PATH" >> $env:GITHUB_OUTPUT
           echo "envname_CUDA_PATH_VX_Y=$env:envname_CUDA_PATH_VX_Y" >> $env:GITHUB_ENV
           echo "$env:envname_CUDA_PATH_VX_Y=$env:CUDA_PATH" >> $env:GITHUB_ENV
           echo "CUDA_VER_0=$env:CUDA_VER_0" >> $env:GITHUB_ENV
@@ -260,6 +265,6 @@ jobs:
       - name: 'Check CUDA'
         shell: pwsh
         run: |
-          $path_nvcc = "${{ env.CUDA_PATH }}\bin\nvcc.exe"
+          $path_nvcc = "${{ needs.setup_build_env.outputs.cuda_path }}\bin\nvcc.exe"
           Write-Output "path_nvcc: " $path_nvcc
           Start-Process -FilePath $path_nvcc -ArgumentList "-V" -NoNewWindow -Wait
