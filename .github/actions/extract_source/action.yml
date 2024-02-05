@@ -18,13 +18,12 @@ runs:
       id: extract_file
       shell: pwsh
       run: |
-        $dir_name_downloads = "downloads"
         $dir_name_externals = "Externals"
         # Externals フォルダを作成
         New-Item -ItemType Directory -Path $dir_name_externals -Force
 
         # 展開一時フォルダ名
-        $dir_name_tmp = $dir_name_downloads+"/tmp"
+        $dir_name_tmp = "tmp_extract"
 
         $compressed_source = "${{ inputs.compressed_source }}"
         $dir = "${{ inputs.dir }}"
