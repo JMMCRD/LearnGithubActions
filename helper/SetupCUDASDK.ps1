@@ -32,7 +32,7 @@ if ($CUDA_KNOWN_URLS.ContainsKey($cuda_ver)){
     $cuda_ver_short = $cuda_ver_major+"."+$cuda_ver_minor
 }
 
-if (-not ($skipInstall == "true")) {
+if ( $skipInstall -ne "true") {
     $list_split_url = $url.Split('/')
     $filename = $list_split_url[-1]
     $dir_name_dl = $path_download
