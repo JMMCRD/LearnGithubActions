@@ -3,6 +3,9 @@ inputs:
   url:
     description: "URL"
     required: true
+  dest_dir:
+    description: "Download Folder Name"
+    required: true
 outputs:
   downloaded_file:
     description: 'path to the downloaded file'
@@ -15,7 +18,7 @@ runs:
       id: download_if_necessary
       shell: pwsh
       run: |
-        $dir_name_downloads = "downloads"
+        $dir_name_downloads = "${{ inputs.dest_dir }}"
         # ダウンロード先フォルダを作成
         New-Item -ItemType Directory -Path $dir_name_downloads -Force
         $url = "${{ inputs.url }}"
