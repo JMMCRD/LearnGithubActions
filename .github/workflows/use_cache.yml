@@ -156,7 +156,7 @@ jobs:
 
       ### MSBuild
       - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
+        uses: microsoft/setup-msbuild@v2
         with:
           vs-version: ${{ env.VSVER_RANGE }}
 
