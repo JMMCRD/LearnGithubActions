@@ -14,6 +14,10 @@ env:
 
   VER_MPI: v10.1.1
   VER_CUDA: 11.8.0
+
+  SOURCE_ROOT_DIR: "Externals"
+  BUILD_ROOT_DIR: "build"
+  INTSTALL_ROOT_DIR: "opt"
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
@@ -203,7 +207,7 @@ jobs:
         id: cache_restore_eigen3
         uses: actions/cache/restore@v4
         with:
-          path: "${{github.workspace}}/opt/${{ env.DIRNAME }}"
+          path: "${{github.workspace}}/${{ env.INTSTALL_ROOT_DIR }}/${{ env.DIRNAME }}"
           key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
 
       - name: Extract Eigen3
@@ -213,25 +217,26 @@ jobs:
         with:
           compressed_source: "${{ steps.download_eigen3.outputs.downloaded_file }}"
           dir: ${{ env.DIRNAME }}
+          root_dir: ${{ env.SOURCE_ROOT_DIR }}
 
       - name: "CMake Eigen"
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/${{ env.DIRNAME }} -B build/${{ env.DIRNAME }} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/${{ env.DIRNAME }}"         
+          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S ${{ env.SOURCE_ROOT_DIR }}/${{ env.DIRNAME }} -B ${{ env.BUILD_ROOT_DIR }}/${{ env.DIRNAME }} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/${{ env.INTSTALL_ROOT_DIR }}/${{ env.DIRNAME }}"         
 
       - name: "MsBuild Eigen"
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
         run: |
           msbuild -version
-          msbuild build\Eigen3\INSTALL.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release
+          msbuild ${{ env.BUILD_ROOT_DIR }}\${{ env.DIRNAME }}\INSTALL.vcxproj -t:rebuild -verbosity:diag -property:Configuration=Release
 
       - name: Save Cache Eigen3
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
         id: cache_save_eigen3
         uses: actions/cache/save@v4
         with:
-          path: "${{github.workspace}}/opt/${{ env.DIRNAME }}"
+          path: "${{github.workspace}}/${{ env.INTSTALL_ROOT_DIR }}/${{ env.DIRNAME }}"
           key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
 
 
@@ -286,7 +291,7 @@ jobs:
         id: cache_restore_eigen3
         uses: actions/cache/restore@v4
         with:
-          path: "${{github.workspace}}/opt/${{ needs.build_eigen3.outputs.dirname }}"
+          path: "${{github.workspace}}/${{ env.INTSTALL_ROOT_DIR }}/${{ needs.build_eigen3.outputs.dirname }}"
           key: ${{ needs.build_eigen3.outputs.cache_key }}
     
       - name: Fail if cache does not exist

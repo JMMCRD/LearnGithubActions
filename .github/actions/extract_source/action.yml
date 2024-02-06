@@ -3,8 +3,11 @@ inputs:
   compressed_source:
     description: "Compressed source file"
     required: true
+  root_dir:
+    description: "Source Root Folder Name"
+    required: true
   dir:
-    description: "Destination Folder Name"
+    description: "Library Folder Name"
     required: true
 # outputs:
 #   downloaded_file:
@@ -18,7 +21,7 @@ runs:
       id: extract_file
       shell: pwsh
       run: |
-        $dir_name_externals = "Externals"
+        $dir_name_externals = "${{ inputs.root_dir }}"  # "Externals"
         # Externals フォルダを作成
         New-Item -ItemType Directory -Path $dir_name_externals -Force
 
