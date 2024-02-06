@@ -196,7 +196,7 @@ jobs:
         id: cache_restore_eigen3
         uses: actions/cache/restore@v4
         with:
-          path: "${{github.workspace}}/opt/${{ step.set_props_eigen3.outputs.DIRNAME }}"
+          path: "${{github.workspace}}/opt/${{ steps.set_props_eigen3.outputs.DIRNAME }}"
           key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
 
       - name: Extract Eigen3
@@ -211,7 +211,7 @@ jobs:
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/${{ step.set_props_eigen3.outputs.DIRNAME }} -B build/${{ step.set_props_eigen3.outputs.DIRNAME }} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/${{ step.set_props_eigen3.outputs.DIRNAME }}"         
+          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/${{ steps.set_props_eigen3.outputs.DIRNAME }} -B build/${{ steps.set_props_eigen3.outputs.DIRNAME }} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/${{ steps.set_props_eigen3.outputs.DIRNAME }}"         
 
       ### MSBuild
       - name: Add MSBuild to PATH
@@ -230,7 +230,7 @@ jobs:
         id: cache_save_eigen3
         uses: actions/cache/save@v4
         with:
-          path: "${{github.workspace}}/opt/${{ step.set_props_eigen3.outputs.DIRNAME }}"
+          path: "${{github.workspace}}/opt/${{ steps.set_props_eigen3.outputs.DIRNAME }}"
           key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
 
 
