@@ -154,6 +154,12 @@ jobs:
         with:
           ref: main
 
+      ### MSBuild
+      - name: Add MSBuild to PATH
+        uses: microsoft/setup-msbuild@v1.1
+        with:
+          vs-version: ${{ env.VSVER_RANGE }}
+
       ## MPI
       - name: Restore Cache MPI
         id: cache_restore_mpi
@@ -189,14 +195,15 @@ jobs:
           $hash = CalcChecksumOfFiles( $source_and_patches )
           $dirname = "Eigen3"
 
-          echo "DIRNAME=$dirname" >> $env:GITHUB_OUTPUT
+          echo "DIRNAME=$dirname" >> $env:GITHUB_OUTPUT # スコープは yaml 全体
+          echo "DIRNAME=$dirname" >> $env:GITHUB_ENV    # スコープはこの job のみ
           echo "CACHE_KEY_NAME=${{ runner.os }}-$dirname-$hash" >> $env:GITHUB_OUTPUT
 
       - name: Restore Cache Eigen3
         id: cache_restore_eigen3
         uses: actions/cache/restore@v4
         with:
-          path: "${{github.workspace}}/opt/${{ steps.set_props_eigen3.outputs.DIRNAME }}"
+          path: "${{github.workspace}}/opt/${{ env.DIRNAME }}"
           key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
 
       - name: Extract Eigen3
@@ -205,19 +212,13 @@ jobs:
         uses: ./.github/actions/extract_source
         with:
           compressed_source: "${{ steps.download_eigen3.outputs.downloaded_file }}"
-          dir: ${{ steps.set_props_eigen3.outputs.DIRNAME }}
+          dir: ${{ env.DIRNAME }}
 
       - name: "CMake Eigen"
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/${{ steps.set_props_eigen3.outputs.DIRNAME }} -B build/${{ steps.set_props_eigen3.outputs.DIRNAME }} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/${{ steps.set_props_eigen3.outputs.DIRNAME }}"         
-
-      ### MSBuild
-      - name: Add MSBuild to PATH
-        uses: microsoft/setup-msbuild@v1.1
-        with:
-          vs-version: ${{ env.VSVER_RANGE }}
+          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/${{ env.DIRNAME }} -B build/${{ env.DIRNAME }} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/${{ env.DIRNAME }}"         
 
       - name: "MsBuild Eigen"
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
@@ -230,7 +231,7 @@ jobs:
         id: cache_save_eigen3
         uses: actions/cache/save@v4
         with:
-          path: "${{github.workspace}}/opt/${{ steps.set_props_eigen3.outputs.DIRNAME }}"
+          path: "${{github.workspace}}/opt/${{ env.DIRNAME }}"
           key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
 
 
