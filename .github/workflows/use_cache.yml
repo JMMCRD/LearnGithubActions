@@ -142,6 +142,10 @@ jobs:
     runs-on: windows-2019
     needs: [setup_build_env]
 
+    outputs:
+      cache_key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
+      dirname: ${{ steps.set_props_eigen3.outputs.DIRNAME }}
+
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       ## 自リポジトリ
@@ -183,15 +187,17 @@ jobs:
             ""
           )
           $hash = CalcChecksumOfFiles( $source_and_patches )
-          echo "HASH_EIGEN3=$hash" >> $env:GITHUB_OUTPUT
-          echo "DIRNAME_EIGEN3=Eigen3" >> $env:GITHUB_OUTPUT
+          $dirname = "Eigen3"
+
+          echo "DIRNAME=$dirname" >> $env:GITHUB_OUTPUT
+          echo "CACHE_KEY_NAME=${{ runner.os }}-$dirname-$hash" >> $env:GITHUB_OUTPUT
 
       - name: Restore Cache Eigen3
         id: cache_restore_eigen3
         uses: actions/cache/restore@v4
         with:
-          path: "${{github.workspace}}/opt/Eigen3"
-          key: ${{ runner.os }}-eigen3-${{ steps.set_props_eigen3.outputs.HASH_EIGEN3 }}
+          path: "${{github.workspace}}/opt/${{ step.set_props_eigen3.outputs.DIRNAME }}"
+          key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
 
       - name: Extract Eigen3
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
@@ -199,13 +205,13 @@ jobs:
         uses: ./.github/actions/extract_source
         with:
           compressed_source: "${{ steps.download_eigen3.outputs.downloaded_file }}"
-          dir: ${{ steps.set_props_eigen3.outputs.DIRNAME_EIGEN3 }}
+          dir: ${{ steps.set_props_eigen3.outputs.DIRNAME }}
 
       - name: "CMake Eigen"
         if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
         shell: pwsh
         run: |
-          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/Eigen3 -B build/Eigen3 -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/Eigen3"         
+          & "./.github/helper/RunCMAKE_vs20XX.ps1" "${{ env.VS20YY }}" "-S Externals/${{ step.set_props_eigen3.outputs.DIRNAME }} -B build/${{ step.set_props_eigen3.outputs.DIRNAME }} -DCMAKE_INSTALL_PREFIX=${{github.workspace}}/opt/${{ step.set_props_eigen3.outputs.DIRNAME }}"         
 
       ### MSBuild
       - name: Add MSBuild to PATH
@@ -224,8 +230,8 @@ jobs:
         id: cache_save_eigen3
         uses: actions/cache/save@v4
         with:
-          path: "${{github.workspace}}/opt/Eigen3"
-          key: ${{ runner.os }}-eigen3-${{ steps.set_props_eigen3.outputs.HASH_EIGEN3 }}
+          path: "${{github.workspace}}/opt/${{ step.set_props_eigen3.outputs.DIRNAME }}"
+          key: ${{ steps.set_props_eigen3.outputs.CACHE_KEY_NAME }}
 
 
       # - name: Restore Cache Downloads
@@ -268,3 +274,23 @@ jobs:
           $path_nvcc = "${{ needs.setup_build_env.outputs.cuda_path }}\bin\nvcc.exe"
           Write-Output "path_nvcc: " $path_nvcc
           Start-Process -FilePath $path_nvcc -ArgumentList "-V" -NoNewWindow -Wait
+
+  build_pcl:
+    # The type of runner that the job will run on
+    runs-on: windows-2019
+    needs: [setup_build_env, build_eigen3]
+
+    steps:
+      - name: Restore Cache Eigen3
+        id: cache_restore_eigen3
+        uses: actions/cache/restore@v4
+        with:
+          path: "${{github.workspace}}/opt/${{ needs.build_eigen3.outputs.dirname }}"
+          key: ${{ needs.build_eigen3.outputs.cache_key }}
+    
+      - name: Fail if cache does not exist
+        shell: pwsh
+        if: steps.cache_restore_eigen3.outputs.cache-hit != 'true'
+        run: |
+          Write-Output "Cache not found: ${{ needs.build_eigen3.outputs.cache_key }}"
+          exit 1
