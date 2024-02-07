@@ -44,10 +44,10 @@ jobs:
         echo "mytagname = ${mytagname}"
         
         $TAG_EXISTS = (git tag | Where-Object { $_ -eq $mytagname }).Count
-        if (${{ steps.check_tag.outputs.tag_exists }} -eq 1) {
-            Write-Output "Tag $mytagname exists."
+        if (${TAG_EXISTS} -eq 1) {
+            Write-Output "Tag ${mytagname} exists."
         } else {
-            Write-Output "Tag $mytagname does not exist."
+            Write-Output "Tag ${mytagname} does not exist."
         }
         
 
