@@ -24,8 +24,6 @@ jobs:
     steps:
       - name: Clone myself
         uses: actions/checkout@v4
-        with:
-          ref: main
 
         # Runs a single command using the runners shell
       - name: Generate Version Strings
