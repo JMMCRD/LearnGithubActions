@@ -10,7 +10,7 @@ on:
         ver_suffix:
           description: 'Additional str'
           default: ''
-          required: true
+          required: false
           type: string
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
