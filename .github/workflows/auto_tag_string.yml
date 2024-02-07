@@ -25,14 +25,12 @@ jobs:
       - name: Clone myself
         uses: actions/checkout@v4
         with:
-          path: myrepo
           fetch-depth: 0
 
         # Runs a single command using the runners shell
       - name: Generate Version Strings
         id: get_my_envs
         shell: pwsh
-        working-directory: myrepo
         run: |
           # 現在のUTC時間を取得
           $nowUtc = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -62,9 +60,15 @@ jobs:
           
 
 
-          # $myreleasename="Release ${{ inputs.ver_0 }}.${{ inputs.ver_1 }}.${{ inputs.ver_2 }}"
-          # echo "myreleasename: ${myreleasename}"
-          # echo "myreleasename=${myreleasename}" >> $env:GITHUB_OUTPUT
+          # $myreleasename="Release ${mytagname}"
+          echo "myreleasename: ${myreleasename}"
+          echo "myreleasename=${myreleasename}" >> $env:GITHUB_OUTPUT
 
-          # $mytagname="v${{ inputs.ver_0 }}.${{ inputs.ver_1 }}.${{ inputs.ver_2 }}"
-          # echo "mytagname=${mytagname}" >> $env:GITHUB_OUTPUT
+          echo "mytagname=${mytagname}" >> $env:GITHUB_OUTPUT
+
+      - name: print_vars
+        shell: pwsh
+        run: |
+          echo "next step"
+          echo "myreleasename = ${{ steps.get_my_envs.outcome.myreleasename }}"
+          echo "mytagname     = ${{ steps.get_my_envs.outcome.mytagname }}"
