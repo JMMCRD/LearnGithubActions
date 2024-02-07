@@ -50,7 +50,7 @@ jobs:
 
           git tag | Write-Output
           
-          $TAG_EXISTS = (git tag | Where-Object { $_ -eq $mytagname }).Count
+          $TAG_EXISTS = (git tag | Where-Object { $_ -eq ${mytagname} }).Count
           if (${TAG_EXISTS} -eq 1) {
               Write-Output "Tag ${mytagname} exists."
               exit 1
@@ -58,9 +58,7 @@ jobs:
               Write-Output "Tag ${mytagname} does not exist."
           }
           
-
-
-          # $myreleasename="Release ${mytagname}"
+          $myreleasename="Release ${dateString}${{ inputs.ver_suffix}}"
           echo "myreleasename: ${myreleasename}"
           echo "myreleasename=${myreleasename}" >> $env:GITHUB_OUTPUT
 
