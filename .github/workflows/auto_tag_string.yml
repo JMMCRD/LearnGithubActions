@@ -22,39 +22,45 @@ jobs:
       mytagname: ${{ steps.get_my_envs.outputs.mytagname }}
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Runs a single command using the runners shell
-    - name: Generate Version Strings
-      id: get_my_envs
-      shell: pwsh
-      run: |
-        # 現在のUTC時間を取得
-        $nowUtc = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-        # JSTタイムゾーンを取得
-        $jstTimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById("Tokyo Standard Time")
-        # UTC時間をJSTに変換
-        $nowJst = [System.TimeZoneInfo]::ConvertTimeFromUtc($nowUtc, $jstTimeZone)
-        # 日付を文字列に変換
-        $dateString = $nowJst.ToString("yyyy.MM.dd")
+      - name: Clone myself
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.PAT_TOKEN_BUILD_I3DE }}   
 
-        # 結果を表示
-        Write-Output $dateString
+        # Runs a single command using the runners shell
+      - name: Generate Version Strings
+        id: get_my_envs
+        shell: pwsh
+        run: |
+          # 現在のUTC時間を取得
+          $nowUtc = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+          # JSTタイムゾーンを取得
+          $jstTimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById("Tokyo Standard Time")
+          # UTC時間をJSTに変換
+          $nowJst = [System.TimeZoneInfo]::ConvertTimeFromUtc($nowUtc, $jstTimeZone)
+          # 日付を文字列に変換
+          $dateString = $nowJst.ToString("yyyy.MM.dd")
 
-        $mytagname="v${dateString}${{ inputs.ver_suffix}}"
+          # 結果を表示
+          Write-Output $dateString
 
-        echo "mytagname = ${mytagname}"
-        
-        $TAG_EXISTS = (git tag | Where-Object { $_ -eq $mytagname }).Count
-        if (${TAG_EXISTS} -eq 1) {
-            Write-Output "Tag ${mytagname} exists."
-        } else {
-            Write-Output "Tag ${mytagname} does not exist."
-        }
-        
+          $mytagname="v${dateString}${{ inputs.ver_suffix}}"
+
+          echo "mytagname = ${mytagname}"
+          
+          $TAG_EXISTS = (git tag | Where-Object { $_ -eq $mytagname }).Count
+          if (${TAG_EXISTS} -eq 1) {
+              Write-Output "Tag ${mytagname} exists."
+          } else {
+              Write-Output "Tag ${mytagname} does not exist."
+          }
+          
 
 
-        # $myreleasename="Release ${{ inputs.ver_0 }}.${{ inputs.ver_1 }}.${{ inputs.ver_2 }}"
-        # echo "myreleasename: ${myreleasename}"
-        # echo "myreleasename=${myreleasename}" >> $env:GITHUB_OUTPUT
+          # $myreleasename="Release ${{ inputs.ver_0 }}.${{ inputs.ver_1 }}.${{ inputs.ver_2 }}"
+          # echo "myreleasename: ${myreleasename}"
+          # echo "myreleasename=${myreleasename}" >> $env:GITHUB_OUTPUT
 
-        # $mytagname="v${{ inputs.ver_0 }}.${{ inputs.ver_1 }}.${{ inputs.ver_2 }}"
-        # echo "mytagname=${mytagname}" >> $env:GITHUB_OUTPUT
+          # $mytagname="v${{ inputs.ver_0 }}.${{ inputs.ver_1 }}.${{ inputs.ver_2 }}"
+          # echo "mytagname=${mytagname}" >> $env:GITHUB_OUTPUT
