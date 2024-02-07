@@ -24,11 +24,14 @@ jobs:
     steps:
       - name: Clone myself
         uses: actions/checkout@v4
+        with:
+          path: myrepo
 
         # Runs a single command using the runners shell
       - name: Generate Version Strings
         id: get_my_envs
         shell: pwsh
+        working-directory: myrepo
         run: |
           # 現在のUTC時間を取得
           $nowUtc = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
