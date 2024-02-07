@@ -68,5 +68,20 @@ jobs:
         shell: pwsh
         run: |
           echo "next step"
-          echo "myreleasename = ${{ steps.get_my_envs.outcome.myreleasename }}"
-          echo "mytagname     = ${{ steps.get_my_envs.outcome.mytagname }}"
+          echo "myreleasename = ${{ steps.get_my_envs.outputs.myreleasename }}"
+          echo "mytagname     = ${{ steps.get_my_envs.outputs.mytagname }}"
+
+
+
+  check_string:
+    # The type of runner that the job will run on
+    needs: [generate_version_string]
+    runs-on: ubuntu-latest
+    steps:
+      - name: print_vars
+        shell: pwsh
+        run: |
+          echo "next step"
+          echo "myreleasename = ${{ needs.generate_version_string.outputs.myreleasename }}"
+          echo "mytagname     = ${{ needs.generate_version_string.outputs.mytagname }}"
+          
