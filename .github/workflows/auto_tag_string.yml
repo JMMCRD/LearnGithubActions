@@ -1,0 +1,62 @@
+name: auto tag string
+
+env:
+  
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  workflow_dispatch:
+    inputs:
+        ver_suffix:
+          description: 'Additional str'
+          default: ''
+          required: true
+          type: string
+  
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "generate_version_string"
+  generate_version_string:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    outputs:
+      myreleasename: ${{ steps.get_my_envs.outputs.myreleasename }}
+      mytagname: ${{ steps.get_my_envs.outputs.mytagname }}
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Runs a single command using the runners shell
+    - name: Generate Version Strings
+      id: get_my_envs
+      shell: pwsh
+      run: |
+        # 現在のUTC時間を取得
+        $nowUtc = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+        # JSTタイムゾーンを取得
+        $jstTimeZone = [System.TimeZoneInfo]::FindSystemTimeZoneById("Tokyo Standard Time")
+        # UTC時間をJSTに変換
+        $nowJst = [System.TimeZoneInfo]::ConvertTimeFromUtc($nowUtc, $jstTimeZone)
+        # 日付を文字列に変換
+        $dateString = $nowJst.ToString("yyyy.MM.dd")
+
+        # 結果を表示
+        Write-Output $dateString
+
+        $mytagname="v${dateString}${{ inputs.ver_suffix}}"
+
+        echo "mytagname = ${mytagname}"
+        
+        $TAG_EXISTS = (git tag | Where-Object { $_ -eq $mytagname }).Count
+        if (${{ steps.check_tag.outputs.tag_exists }} -eq 1) {
+            Write-Output "Tag $mytagname exists."
+        } else {
+            Write-Output "Tag $mytagname does not exist."
+        }
+        
+
+
+        # $myreleasename="Release ${{ inputs.ver_0 }}.${{ inputs.ver_1 }}.${{ inputs.ver_2 }}"
+        # echo "myreleasename: ${myreleasename}"
+        # echo "myreleasename=${myreleasename}" >> $env:GITHUB_OUTPUT
+
+        # $mytagname="v${{ inputs.ver_0 }}.${{ inputs.ver_1 }}.${{ inputs.ver_2 }}"
+        # echo "mytagname=${mytagname}" >> $env:GITHUB_OUTPUT
