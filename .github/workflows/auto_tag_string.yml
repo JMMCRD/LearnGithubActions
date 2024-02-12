@@ -71,8 +71,6 @@ jobs:
           echo "myreleasename = ${{ steps.get_my_envs.outputs.myreleasename }}"
           echo "mytagname     = ${{ steps.get_my_envs.outputs.mytagname }}"
 
-
-
   check_string:
     # The type of runner that the job will run on
     needs: [generate_version_string]
@@ -84,4 +82,25 @@ jobs:
           echo "next step"
           echo "myreleasename = ${{ needs.generate_version_string.outputs.myreleasename }}"
           echo "mytagname     = ${{ needs.generate_version_string.outputs.mytagname }}"
-          
+
+  create_tag:
+    needs: [generate_version_string, check_string]
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Clone myself
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          path: my-source
+
+      - name: Create Tag
+        id: create_tag_step
+        shell: bash
+        working-directory: my-source
+        run: |
+          git tag ${{ needs.generate_version_string.outputs.mytagname }}
+          git push origin ${{ needs.generate_version_string.outputs.mytagname }}
+   
+
+
